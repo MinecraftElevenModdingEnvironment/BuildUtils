@@ -18,7 +18,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
@@ -35,6 +34,10 @@ public class MinecraftInstallationUtils {
 			.registerTypeAdapter(DummyProperty.class, new DummyTypeAdapter())
 			.registerTypeAdapter(LauncherProfiles.class, new LauncherProfiles.Serializer()).setPrettyPrinting()
 			.create();
+	private static final Gson VERSION_GSON = new GsonBuilder()
+			.registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory())
+			.registerTypeAdapter(Date.class, new DateTypeAdapter()).enableComplexMapKeySerialization()
+			.setPrettyPrinting().create();
 	private static String latestVersion = null;
 
 	private MinecraftInstallationUtils() {
@@ -74,29 +77,37 @@ public class MinecraftInstallationUtils {
 		}
 	}
 
-	public static File getVersionJsonFile(File installDir, Profile profile) {
-		return new File(installDir, "versions/" + profile.name + "/" + profile.name + ".json");
+	public static File getVersionJsonFile(File installDir, String versionName) {
+		return new File(installDir, "versions/" + versionName + "/" + versionName + ".json");
+	}
+
+	public static Version getVersion(File installDir, String versionName) {
+		try {
+			return VERSION_GSON.fromJson(new FileReader(getVersionJsonFile(installDir, versionName)), Version.class);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static void writeVersion(File installDir, Version version) {
+		try {
+			VERSION_GSON.toJson(version, new FileWriter(getVersionJsonFile(installDir, version.id)));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static String computeLatestVersion(File installDir) throws IOException {
 		Map<String, Date> versionUpdateTimes = new HashMap<>();
-		Gson dateGson = new GsonBuilder().registerTypeAdapter(Date.class, new DateTypeAdapter()).create();
-		JsonParser parser = new JsonParser();
 		File versionsDir = new File(installDir, "versions");
 		for (File versionDir : versionsDir.listFiles()) {
 			if (versionDir.isDirectory()) {
-				File versionJsonFile = new File(versionDir, versionDir.getName() + ".json");
-				if (versionJsonFile.isFile()) {
-					JsonElement json = parser.parse(new FileReader(versionJsonFile));
-					try {
-						if (json.getAsJsonObject().get("id").getAsString().equals(versionDir.getName())) {
-							versionUpdateTimes.put(versionDir.getName(),
-									dateGson.fromJson(json.getAsJsonObject().get("time"), Date.class));
-						}
-					} catch (RuntimeException e) {
-						// Ignore, just move on to the next version
-					}
+				String versionName = versionDir.getName();
+				Version version = getVersion(installDir, versionName);
+				if (version.id.equals(versionName)) {
+					continue;
 				}
+				versionUpdateTimes.put(versionName, version.time);
 			}
 		}
 		Date currentLatestTime = new Date(0);
@@ -122,7 +133,16 @@ public class MinecraftInstallationUtils {
 	}
 
 	public static File getMinecraftElevenJARFile(File installDir) {
-		return new File(installDir, "versions/1.11/1.11.jar");
+		return getJARFile(installDir, getVersion(installDir, "1.11"));
+	}
+
+	public static File getJARFile(File installDir, Version version) {
+		Version resolved = version.resolve(installDir);
+		return new File(installDir, resolved.jar == null ? resolved.id : resolved.jar);
+	}
+
+	public static File getJARFile(File installDir, String jarName) {
+		return new File(installDir, "/versions/" + jarName + "/" + jarName + ".jar");
 	}
 
 	public static class LauncherProfiles {
