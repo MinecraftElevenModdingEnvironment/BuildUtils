@@ -1,6 +1,54 @@
 
+buildscript {
+	repositories {
+		jcenter()
+	}
+	
+	dependencies {
+		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.2'
+	}
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+configurations {
+	normalConfiguration
+}
+
+publishing {
+	publications {
+		normalPublication(MavenPublication) {
+			artifactId 'build-util'
+			from components.java
+			artifact sourcesJar
+		}
+	}
+}
+
+bintray {
+	user = bintrayUser
+	key = bintrayKey
+	dryRun = false
+	publish = false
+	pkg {
+		repo = 'meme'
+		name = 'build-util'
+			configurations = ['normalConfiguration']
+			publications = ['normalPublication']
+	}
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+artifacts {
+	sourcesJar
+}
 
 repositories {
 	jcenter()
@@ -9,4 +57,34 @@ repositories {
 dependencies {
 	compile 'com.google.code.gson:gson:2.8.0'
 	compile 'org.ow2.asm:asm-debug-all:5.0.4'
+}
+
+group = 'net.earthcomputer.meme'
+version = "${versionMajor}.${versionMinor}.${versionRevision}.${versionBuildNumber}"
+
+def bumpVersionNumber(String versionPart) {
+	Properties props = new Properties()
+	File propsFile = file('gradle.properties')
+	props.load(propsFile.newDataInputStream())
+	int nextBuildNum = (((props.getProperty("version${versionPart}")) as BigInteger) + 1)
+	props.setProperty("version${versionPart}", nextBuildNum.toString())
+	props.store(propsFile.newWriter(), null)
+	props.load(propsFile.newDataInputStream())
+}
+
+task bumpBuildNumber << {
+	bumpVersionNumber('BuildNumber')
+}
+build.dependsOn bumpBuildNumber
+
+task bumpRevision << {
+	bumpVersionNumber('Revision')
+}
+
+task bumpMinor << {
+	bumpVersionNumber('Minor')
+}
+
+task bumpMajor << {
+	bumpVersionNumber('Major')
 }
