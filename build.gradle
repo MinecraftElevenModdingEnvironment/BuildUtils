@@ -22,13 +22,3 @@ dependencies {
 
 group = 'net.earthcomputer.meme'
 version = "${versionMajor}.${versionMinor}.${versionRevision}.${versionBuildNumber}"
-
-def bumpVersionNumber(String versionPart) {
-	Properties props = new Properties()
-	File propsFile = file('gradle.properties')
-	props.load(propsFile.newDataInputStream())
-	int nextBuildNum = (((props.getProperty("version${versionPart}")) as BigInteger) + 1)
-	props.setProperty("version${versionPart}", nextBuildNum.toString())
-	props.store(propsFile.newWriter(), null)
-	props.load(propsFile.newDataInputStream())
-}
