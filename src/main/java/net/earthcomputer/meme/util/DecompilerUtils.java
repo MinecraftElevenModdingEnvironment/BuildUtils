@@ -31,4 +31,14 @@ public class DecompilerUtils {
 		}
 	}
 
+	public static void createObfuscatedJar(File deobfuscatedJar, File mappings, File outputJar) {
+		try {
+			CommandMain.main(new String[] { "reobfuscate", deobfuscatedJar.getAbsolutePath(),
+					outputJar.getAbsolutePath(), mappings.getAbsolutePath() });
+		} catch (Exception e) {
+			System.err.println("Exception creating obfuscated jar");
+			throw Throwables.propagate(e);
+		}
+	}
+
 }
