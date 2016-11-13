@@ -62,15 +62,13 @@ public class MinecraftJarMerger {
 		this.outputJar = outputJar;
 	}
 
-	public static File downloadServer() throws IOException {
-		File serverFile = File.createTempFile("serverJar", ".jar");
-		serverFile.deleteOnExit();
-		URL serverURL = new URL("https://s3.amazonaws.com/Minecraft.Download/versions/1.11/minecraft_server.1.11.jar");
-		OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(serverFile));
-		IOUtils.copyStreams(serverURL.openConnection().getInputStream(), outputStream);
-		outputStream.flush();
-		outputStream.close();
-		return serverFile;
+	public static void downloadClient(File dest) throws IOException {
+		IOUtils.download(new URL("https://s3.amazonaws.com/Minecraft.Download/versions/1.11/minecraft.1.11.jar"), dest);
+	}
+
+	public static void downloadServer(File dest) throws IOException {
+		IOUtils.download(new URL("https://s3.amazonaws.com/Minecraft.Download/versions/1.11/minecraft_server.1.11.jar"),
+				dest);
 	}
 
 	public void mergeJars() throws IOException {
