@@ -2,8 +2,7 @@
 buildscript {
 	repositories {
 		jcenter()
-		maven { url 'https://dl.bintray.com/earthcomputer/meme'
-		} }
+		maven { url 'https://dl.bintray.com/earthcomputer/meme' } }
 
 	dependencies { classpath ('net.earthcomputer.meme:meme-gradle:1.0.0.11') { exclude module: 'build-util' }}
 }
@@ -13,6 +12,13 @@ apply plugin: 'net.earthcomputer.meme.general'
 meme {
 	artifactId = 'build-util'
 	bintrayPackageName = 'build-util'
+}
+
+repositories {
+	maven {
+		name "Cuchaz Custom Repository"
+		url 'http://maven.cuchazinteractive.com'
+	}
 }
 
 dependencies {
