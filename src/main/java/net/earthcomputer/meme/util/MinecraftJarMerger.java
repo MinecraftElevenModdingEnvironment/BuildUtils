@@ -63,11 +63,14 @@ public class MinecraftJarMerger {
 	}
 
 	public static void downloadClient(File dest) throws IOException {
-		IOUtils.download(new URL("https://s3.amazonaws.com/Minecraft.Download/versions/1.11/minecraft.1.11.jar"), dest);
+		IOUtils.download(
+				new URL("https://launcher.mojang.com/mc/game/1.11/client/780e46b3a96091a7f42c028c615af45974629072/client.jar"),
+				dest);
 	}
 
 	public static void downloadServer(File dest) throws IOException {
-		IOUtils.download(new URL("https://s3.amazonaws.com/Minecraft.Download/versions/1.11/minecraft_server.1.11.jar"),
+		IOUtils.download(
+				new URL("https://launcher.mojang.com/mc/game/1.11/server/48820c84cb1ed502cb5b2fe23b8153d5e4fa61c0/server.jar"),
 				dest);
 	}
 
